@@ -21,12 +21,17 @@ const secondaryNav = [
   { id: 'website-settings', label: 'Website Settings', icon: Globe, hasChevron: true },
 ];
 
-export default function Sidebar() {
-  const [activeItem, setActiveItem] = useState('dashboard');
+export default function Sidebar({ initialActiveItem = 'dashboard', onChange }) {
+  const [activeItem, setActiveItem] = useState(initialActiveItem);
+
+  const handleItemClick = (itemId) => {
+    setActiveItem(itemId);
+    if (onChange) onChange(itemId);
+  };
 
   return (
-    <div className="flex h-screen bg-slate-100">
-      <aside className="w-64 bg-white text-slate-400 flex flex-col justify-between p-4 border-r border-slate-200 select-none font-sans shrink-0">
+    <div className="h-full shrink-0 bg-slate-100">
+      <aside className="flex h-full w-64 flex-col justify-between border-r border-slate-200 bg-white p-4 text-slate-400 shadow-sm select-none font-sans">
         {/* Top Header & Main Navigation */}
         <div className="space-y-6">
           {/* Brand Header */}
@@ -56,7 +61,7 @@ export default function Sidebar() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveItem(item.id)}
+                  onClick={() => handleItemClick(item.id)}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium transition-colors ${
                     isActive
                       ? 'bg-slate-900 text-white shadow-sm'
@@ -89,7 +94,7 @@ export default function Sidebar() {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveItem(item.id)}
+                onClick={() => handleItemClick(item.id)}
                 className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-slate-900 text-white shadow-sm'

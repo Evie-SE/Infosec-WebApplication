@@ -1,5 +1,53 @@
 @import "tailwindcss";
 
+html,
 body {
+  height: 100%;
   margin: 0;
+  overflow: hidden;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+#root {
+  height: 100%;
+}
+
+@layer components {
+  .page-heading {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+  }
+
+  .page-date {
+    margin-top: 0.125rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: #94a3b8;
+  }
+
+  .section-heading {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .surface-card {
+    border: 1px solid #f1f5f9;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+  }
 }
