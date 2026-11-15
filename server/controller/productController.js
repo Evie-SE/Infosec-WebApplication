@@ -1,27 +1,34 @@
 import Product from "../model/productModel.js";
 
+// CREATE: Single or Bulk Product(s)
 export const createProduct = async (req, res) => {
   try {
-    const newProduct = new Product(req.body);
-    const { name } = newProduct;
-
-    // Optional: Check if a product with the same name already exists
-    const productExist = await Product.findOne({ name });
-    if (productExist) {
-      return res.status(400).json({ message: "Product already exists." });
+    if (Array.isArray(req.body)) {
+      const savedProducts = await Product.insertMany(req.body, { runValidators: true });
+      return res.status(201).json(savedProducts);
     }
 
+    const newProduct = new Product(req.body);
     const savedProduct = await newProduct.save();
-    res.status(201).json(savedProduct);
+    
+    // Populate brand and category before returning
+    const populatedProduct = await Product.findById(savedProduct._id)
+      .populate("brand", "name countryOfOrigin")
+      .populate("category", "name description");
+
+    res.status(201).json(populatedProduct);
   } catch (error) {
     res.status(500).json({ errorMessage: error.message });
   }
 };
 
-// READ (All): Get all products
+// READ (All): Get all products and populate brand and category info
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find()
+      .populate("brand", "name countryOfOrigin")
+      .populate("category", "name description");
+
     if (!products || products.length === 0) {
       return res.status(404).json({ message: "No products found." });
     }
@@ -31,11 +38,12 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
-// READ (One): Get a single product by ID
+// READ (One): Get a single product by ID with brand and category populated
 export const getProductById = async (req, res) => {
   try {
-    const id = req.params.id;
-    const product = await Product.findById(id);
+    const product = await Product.findById(req.params.id)
+      .populate("brand", "name countryOfOrigin")
+      .populate("category", "name description");
 
     if (!product) {
       return res.status(404).json({ message: "Product not found." });
@@ -46,41 +54,34 @@ export const getProductById = async (req, res) => {
   }
 };
 
-// UPDATE: Update an existing product by ID
+// UPDATE: Update product by ID
 export const updateProduct = async (req, res) => {
   try {
-    const id = req.params.id;
-    const productExist = await Product.findById(id);
+    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    })
+      .populate("brand", "name")
+      .populate("category", "name");
 
-    if (!productExist) {
+    if (!updatedProduct) {
       return res.status(404).json({ message: "Product not found." });
     }
-
-    const updatedProduct = await Product.findByIdAndUpdate(id, req.body, {
-      new: true, // Returns the updated document instead of the old one
-      runValidators: true, // Ensures schema rules (like required fields & Number type) are checked
-    });
-
     res.status(200).json(updatedProduct);
   } catch (error) {
     res.status(500).json({ errorMessage: error.message });
   }
 };
 
-// DELETE: Delete a product by ID
+// DELETE: Delete product by ID
 export const deleteProduct = async (req, res) => {
   try {
-    const id = req.params.id;
-    const productExist = await Product.findById(id);
-
-    if (!productExist) {
+    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+    if (!deletedProduct) {
       return res.status(404).json({ message: "Product not found." });
     }
-
-    await Product.findByIdAndDelete(id);
     res.status(200).json({ message: "Product deleted successfully." });
   } catch (error) {
     res.status(500).json({ errorMessage: error.message });
   }
 };
-
