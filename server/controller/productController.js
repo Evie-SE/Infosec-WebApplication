@@ -38,10 +38,10 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
-// READ (One): Get a single product by ID with brand and category populated
-export const getProductById = async (req, res) => {
+export const getProductByName = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
+    const productName = decodeURIComponent(req.params.name);
+    const product = await Product.findOne({ name: productName })
       .populate("brand", "name countryOfOrigin")
       .populate("category", "name description");
 
@@ -54,13 +54,15 @@ export const getProductById = async (req, res) => {
   }
 };
 
-// UPDATE: Update product by ID
-export const updateProduct = async (req, res) => {
+// UPDATE (by Name): Update product by its name
+export const updateProductByName = async (req, res) => {
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    })
+    const productName = decodeURIComponent(req.params.name);
+    const updatedProduct = await Product.findOneAndUpdate(
+      { name: productName }, 
+      req.body, 
+      { new: true, runValidators: true }
+    )
       .populate("brand", "name")
       .populate("category", "name");
 
@@ -73,10 +75,12 @@ export const updateProduct = async (req, res) => {
   }
 };
 
-// DELETE: Delete product by ID
-export const deleteProduct = async (req, res) => {
+// DELETE (by Name): Delete product by its name
+export const deleteProductByName = async (req, res) => {
   try {
-    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+    const productName = decodeURIComponent(req.params.name);
+    const deletedProduct = await Product.findOneAndDelete({ name: productName });
+    
     if (!deletedProduct) {
       return res.status(404).json({ message: "Product not found." });
     }
