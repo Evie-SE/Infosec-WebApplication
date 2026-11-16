@@ -6,7 +6,6 @@ import {
   Eye,
   ChevronRight,
 } from 'lucide-react';
-import PRODUCTS from '../data/products.js';
 
 const stats = [
   {
@@ -89,7 +88,7 @@ const salesTrends = {
   'New Balance 574': 'Up',
 };
 
-export default function DashboardPage() {
+export default function DashboardPage({ products }) {
   const [salesPeriod, setSalesPeriod] = useState('1 week');
 
   return (
@@ -97,7 +96,7 @@ export default function DashboardPage() {
       {/* Top Header */}
       <div className="mb-8">
         <h1 className="page-heading">Welcome, Jeriana</h1>
-        <p className="page-date">1 April 2023</p>
+        <p className="page-date">1 April 2023ca</p>
       </div>
 
       {/* Metrics Cards */}
@@ -344,7 +343,7 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody className="text-sm text-slate-800">
-              {PRODUCTS.map((product) => {
+              {products.map((product) => {
                 const trend = salesTrends[product.name];
                 return (
                   <tr key={product.id} className="border-b border-slate-200 last:border-b-0">

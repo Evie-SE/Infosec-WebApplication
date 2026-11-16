@@ -10,8 +10,9 @@ import {
   Package,
   Search,
   Tags,
+  Trash2,
 } from 'lucide-react';
-import PRODUCTS from '../data/products.js';
+import PageHeader from '../components/PageHeader.jsx';
 
 const tabs = [
   { id: 'products', label: 'Products', icon: Package },
@@ -65,7 +66,7 @@ function downloadReport(products) {
   URL.revokeObjectURL(url);
 }
 
-export default function InventoryReportPage() {
+export default function InventoryReportPage({ products, setProducts }) {
   const [activeTab, setActiveTab] = useState('products');
   const [search, setSearch] = useState('');
   const [period, setPeriod] = useState('1 year');
@@ -78,13 +79,13 @@ export default function InventoryReportPage() {
 
   const filteredProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return PRODUCTS.filter((product) => {
+    return products.filter((product) => {
       const matchesQuery = `${product.name} ${product.sku} ${product.brand} ${product.category}`
         .toLowerCase()
         .includes(query);
       return matchesQuery && (!category || product.category === category) && (!brand || product.brand === brand);
     });
-  }, [brand, category, search]);
+  }, [brand, category, products, search]);
 
   const pageCount = Math.max(1, Math.ceil(filteredProducts.length / Number(pageSize)));
   const displayedPage = Math.min(currentPage, pageCount);
@@ -108,28 +109,42 @@ export default function InventoryReportPage() {
       : [...new Set([...current, ...pageProducts.map((product) => product.id)])]);
   };
 
+  const removeSelectedProducts = () => {
+    const idsToRemove = new Set(selectedIds);
+    setProducts((current) => current.filter((product) => !idsToRemove.has(product.id)));
+    setSelectedIds([]);
+    setExpandedId(null);
+  };
+
   return (
     <div className="min-h-full bg-slate-50/50 p-4 font-sans text-slate-800 sm:p-8">
-      <header className="mb-8">
-        <div>
-          <h1 className="page-heading">Welcome, Jeriana</h1>
-          <p className="page-date">1 April 2023</p>
-        </div>
-      </header>
+      <PageHeader />
 
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="page-heading text-xl">Inventory Report</h2>
-          <p className="mt-1 text-sm text-slate-500">Stock, sales and incoming units across all 7 shoes.</p>
+          <p className="mt-1 text-sm text-slate-500">Stock, sales and incoming units across all {products.length} shoes.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => downloadReport(filteredProducts)}
-          className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-        >
-          <Download className="h-4 w-4" />
-          Export report
-        </button>
+        <div className="flex items-center gap-2">
+          {activeTab === 'products' && selectedIds.length > 0 && (
+            <button
+              type="button"
+              onClick={removeSelectedProducts}
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
+            >
+              <Trash2 className="h-4 w-4" />
+              Remove {selectedIds.length} selected
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => downloadReport(filteredProducts)}
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+          >
+            <Download className="h-4 w-4" />
+            Export report
+          </button>
+        </div>
       </div>
 
       <section className="surface-card overflow-hidden p-4 sm:p-5">
@@ -179,7 +194,7 @@ export default function InventoryReportPage() {
             <SelectControl
               label="All categories"
               value={category}
-              options={[...new Set(PRODUCTS.map((product) => product.category))]}
+              options={[...new Set(products.map((product) => product.category))]}
               onChange={(value) => {
                 setCategory(value);
                 setCurrentPage(1);
@@ -188,7 +203,7 @@ export default function InventoryReportPage() {
             <SelectControl
               label="All brands"
               value={brand}
-              options={[...new Set(PRODUCTS.map((product) => product.brand))]}
+              options={[...new Set(products.map((product) => product.brand))]}
               onChange={(value) => {
                 setBrand(value);
                 setCurrentPage(1);
@@ -240,7 +255,7 @@ export default function InventoryReportPage() {
                         </td>
                         <td className="py-2 pr-3">
                           <div className="flex min-w-0 items-center gap-2.5">
-                            <img src={product.image} alt="" className="h-10 w-12 shrink-0 rounded-md bg-slate-100 object-cover" />
+                            <img src={product.images[0].src} alt="" className="h-10 w-12 shrink-0 rounded-md bg-slate-100 object-cover" />
                             <div className="min-w-0">
                               <p className="truncate font-medium text-slate-800">{product.name}</p>
                               <p className="mt-0.5 text-xs text-slate-400">{product.sku}</p>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
+  ArrowRight,
   ChevronDown,
   Download,
   Grid2X2,
@@ -9,7 +10,8 @@ import {
   Search,
   Upload,
 } from 'lucide-react';
-import PRODUCTS from '../data/products.js';
+import PageHeader from '../components/PageHeader.jsx';
+import ProductDetails from '../components/ProductDetails.jsx';
 
 function FilterSelect({ label, value, options, onChange }) {
   return (
@@ -36,7 +38,7 @@ function FilterSelect({ label, value, options, onChange }) {
   );
 }
 
-function ProductCard({ product, listView }) {
+function ProductCard({ product, listView, onViewProduct }) {
   return (
     <article
       className={`surface-card group overflow-hidden transition-shadow hover:shadow-md ${
@@ -45,7 +47,7 @@ function ProductCard({ product, listView }) {
     >
       <div className={`relative overflow-hidden bg-slate-50 ${listView ? 'h-full min-h-44' : 'h-[188px]'}`}>
         <img
-          src={product.image}
+          src={product.images[0].src}
           alt={product.name}
           className="h-full w-full object-cover mix-blend-multiply transition-transform duration-300 group-hover:scale-[1.03]"
         />
@@ -66,9 +68,20 @@ function ProductCard({ product, listView }) {
           <span aria-label="In stock" className={`h-1.5 w-1.5 shrink-0 rounded-full ${product.color}`} />
         </div>
         <h2 className="text-sm font-medium leading-5 text-slate-800">{product.name}</h2>
-        <div className="mt-1.5 space-y-0.5 text-xs leading-4 text-slate-500">
-          <p>Category: Sneakers</p>
-          <p>Brand: {product.brand}</p>
+        <div className="relative mt-1.5 min-h-8 pr-24 text-xs leading-4 text-slate-500">
+          <div className="space-y-0.5">
+            <p>Category: {product.category}</p>
+            <p>Brand: {product.brand}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onViewProduct(product)}
+            aria-label={`View details for ${product.name}`}
+            className="pointer-events-none absolute right-0 top-1/2 inline-flex -translate-y-1/2 items-center gap-1 rounded-md bg-rose-100 px-2 py-1 text-[10px] font-medium text-rose-700 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+          >
+            View details
+            <ArrowRight aria-hidden="true" className="h-3 w-3" />
+          </button>
         </div>
         <div className="mt-auto flex items-center justify-between gap-2 pt-2 text-xs text-slate-500">
           <span className="flex min-w-0 items-center gap-1.5">
@@ -82,16 +95,17 @@ function ProductCard({ product, listView }) {
   );
 }
 
-export default function ProductPage() {
+export default function ProductPage({ products }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
   const [brand, setBrand] = useState('');
   const [sortOrder, setSortOrder] = useState('');
   const [listView, setListView] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const filteredProducts = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    const result = PRODUCTS.filter((product) => {
+    const result = products.filter((product) => {
       const matchesSearch = `${product.name} ${product.brand} Sneakers`.toLowerCase().includes(query);
       return matchesSearch && (!category || category === 'Sneakers') && (!brand || product.brand === brand);
     });
@@ -100,16 +114,11 @@ export default function ProductPage() {
     if (sortOrder === 'Price: low to high') return [...result].sort((a, b) => a.price - b.price);
     if (sortOrder === 'Price: high to low') return [...result].sort((a, b) => b.price - a.price);
     return result;
-  }, [brand, category, searchTerm, sortOrder]);
+  }, [brand, category, products, searchTerm, sortOrder]);
 
   return (
     <div className="min-h-full bg-slate-50/50 p-4 font-sans text-slate-800 sm:p-8">
-      <header className="mb-8">
-        <div>
-          <h1 className="page-heading">Welcome, Jeriana</h1>
-          <p className="page-date">1 April 2026</p>
-        </div>
-      </header>
+      <PageHeader />
 
       <main>
         <div className="mb-5 flex flex-wrap items-center justify-between gap-5">
@@ -150,7 +159,7 @@ export default function ProductPage() {
             <FilterSelect
               label="Brand"
               value={brand}
-              options={[...new Set(PRODUCTS.map((product) => product.brand))]}
+              options={[...new Set(products.map((product) => product.brand))]}
               onChange={setBrand}
             />
             <FilterSelect
@@ -185,7 +194,12 @@ export default function ProductPage() {
         {filteredProducts.length > 0 ? (
           <div className={listView ? 'grid grid-cols-1 gap-5' : 'grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4'}>
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} listView={listView} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                listView={listView}
+                onViewProduct={setSelectedProduct}
+              />
             ))}
           </div>
         ) : (
@@ -196,6 +210,9 @@ export default function ProductPage() {
 
         <p className="mt-6 text-xs text-slate-500">Showing {filteredProducts.length} products</p>
       </main>
+      {selectedProduct && (
+        <ProductDetails product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+      )}
     </div>
   );
 }
