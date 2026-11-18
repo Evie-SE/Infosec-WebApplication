@@ -13,3 +13,7 @@
 1. **Test Endpoints:** Fire up Postman and test the new name-based product endpoints (`GET /api/product/:name`, `PUT /api/product/:name`, `DELETE /api/product/:name`).
 2. **Dashboard / Analytics:** Implement an aggregation query or endpoint to calculate total sales and revenue for order reports.
 3. **Frontend Integration:** Start connecting your backend API endpoints to a frontend client (such as a React, Vite, and Tailwind CSS dashboard).
+4. **Verify app health:** Run server/client locally and confirm routes/pages load without errors.
+5. **Code quality:** Run lint/typecheck if configured and fix any issues before next feature work.
+
+_Updated: 2026-11-18 (quick note refresh)_
