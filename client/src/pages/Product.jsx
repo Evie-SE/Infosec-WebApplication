@@ -95,7 +95,7 @@ function ProductCard({ product, listView, onViewProduct }) {
   );
 }
 
-export default function ProductPage({ products }) {
+export default function ProductPage({ products, onAddProduct, onEditProduct }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
   const [brand, setBrand] = useState('');
@@ -124,7 +124,7 @@ export default function ProductPage({ products }) {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-5">
           <div className="flex items-center gap-3">
             <h2 className="section-heading text-xl">Products</h2>
-            <span className="rounded-md bg-[#f04a2c] px-2 py-0.5 text-sm font-semibold leading-5 text-white">242</span>
+            <span className="rounded-md bg-[#f04a2c] px-2 py-0.5 text-sm font-semibold leading-5 text-white">{products.length}</span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
@@ -135,7 +135,11 @@ export default function ProductPage({ products }) {
               <Upload className="h-3 w-3" />
               Export
             </button>
-            <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 text-sm font-medium text-white transition hover:bg-slate-700">
+            <button
+              type="button"
+              onClick={onAddProduct}
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 text-sm font-medium text-white transition hover:bg-slate-700"
+            >
               <Plus className="h-3 w-3" />
               Add Product
             </button>
@@ -211,7 +215,14 @@ export default function ProductPage({ products }) {
         <p className="mt-6 text-xs text-slate-500">Showing {filteredProducts.length} products</p>
       </main>
       {selectedProduct && (
-        <ProductDetails product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+        <ProductDetails
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onEdit={() => {
+            onEditProduct(selectedProduct);
+            setSelectedProduct(null);
+          }}
+        />
       )}
     </div>
   );

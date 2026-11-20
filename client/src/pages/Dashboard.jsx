@@ -6,97 +6,85 @@ import {
   Eye,
   ChevronRight,
 } from 'lucide-react';
+import { DEFAULT_AVATAR } from '../api.js';
 
-const stats = [
-  {
-    title: 'Total Sales',
-    value: '$30,412',
-    change: '1.5%',
-    period: 'vs last Month',
-    valueColor: 'text-emerald-600',
-    changeColor: 'text-emerald-500'
-  },
-  {
-    title: 'Total Order',
-    value: '12,980',
-    change: '1.5%',
-    period: 'vs last Month',
-    valueColor: 'text-rose-500',
-    changeColor: 'text-emerald-500'
-  },
-  {
-    title: 'Total Customer',
-    value: '2.753',
-    change: '114 new customer',
-    period: 'vs last month',
-    valueColor: 'text-emerald-600',
-    changeColor: 'text-emerald-500'
-  }
-];
+const TODAY = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 
-const orderChannels = [
-  { name: 'E-commerce', value: 57 },
-  { name: 'Offline store', value: 43 },
-];
+const money = (value) => `$${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
-const recentOrders = [
-  {
-    orderNumber: '12563987563',
-    date: '18/7/2023',
-    product: 'Dolan watch',
-    customerName: 'Allan wood',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&auto=format&fit=crop&q=80',
-    totalAmount: ' ₱1,349',
-    status: 'on process',
-  },
-  {
-    orderNumber: '125479663587',
-    date: '18/7/2023',
-    product: 'Hollan Bag',
-    customerName: 'Damian simsons',
-    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=80&auto=format&fit=crop&q=80',
-    totalAmount: ' ₱649',
-    status: 'Waiting payment',
-  },
-  {
-    orderNumber: '154986315687',
-    date: '18/7/2023',
-    product: 'Eagle Bag',
-    customerName: 'Hanah cole',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&auto=format&fit=crop&q=80',
-    totalAmount: ' ₱745',
-    status: 'Delivered',
-  },
-  {
-    orderNumber: '123698745632',
-    date: '18/7/2023',
-    product: 'Moze Cap',
-    customerName: 'Gabbie Scott',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&auto=format&fit=crop&q=80',
-    totalAmount: ' ₱523',
-    status: 'Canceled',
-  }
-];
+const changePercent = (current, previous) =>
+  previous ? (((current - previous) / previous) * 100).toFixed(1) : '0.0';
 
-const salesTrends = {
-  'Nike Air Max': 'Down',
-  'Adidas Samba': 'Up',
-  'Puma Suede': 'Up',
-  'Reebok Classic': 'Down',
-  'Converse Chuck': 'Up',
-  'Vans Old Skool': 'Up',
-  'New Balance 574': 'Up',
+const splitOldNew = (items) => {
+  const sorted = [...items].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  );
+  const midpoint = Math.floor(sorted.length / 2);
+  return [sorted.slice(0, midpoint), sorted.slice(midpoint)];
 };
 
-export default function DashboardPage({ products }) {
+export default function DashboardPage({ products, orders, users }) {
   const [salesPeriod, setSalesPeriod] = useState('1 week');
+
+  const [olderOrders, newerOrders] = splitOldNew(orders);
+  const [olderUsers, newerUsers] = splitOldNew(users);
+  const sumAmounts = (list) => list.reduce((total, order) => total + (Number(order.totalAmount) || 0), 0);
+
+  const stats = [
+    {
+      title: 'Total Sales',
+      value: money(sumAmounts(orders)),
+      change: `${changePercent(sumAmounts(newerOrders), sumAmounts(olderOrders))}%`,
+      period: 'vs earlier orders',
+      valueColor: 'text-emerald-600',
+      changeColor: 'text-emerald-500',
+    },
+    {
+      title: 'Total Order',
+      value: orders.length.toLocaleString(),
+      change: `${changePercent(newerOrders.length, olderOrders.length)}%`,
+      period: 'vs earlier orders',
+      valueColor: 'text-rose-500',
+      changeColor: 'text-emerald-500',
+    },
+    {
+      title: 'Total Customer',
+      value: users.length.toLocaleString(),
+      change: `${changePercent(newerUsers.length, olderUsers.length)}%`,
+      period: 'vs earlier users',
+      valueColor: 'text-emerald-600',
+      changeColor: 'text-emerald-500',
+    },
+  ];
+
+  const delivered = orders.filter((order) => order.status === 'Delivered').length;
+  const deliveredPercent = orders.length ? Math.round((delivered / orders.length) * 100) : 0;
+  const orderChannels = [
+    { name: 'Delivered', value: deliveredPercent, color: 'bg-[#303236]' },
+    { name: 'In progress', value: orders.length ? 100 - deliveredPercent : 0, color: 'bg-[#d9dce0]' },
+  ];
+
+  const recentOrders = [...orders]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5)
+    .map((order) => ({
+      orderNumber: String(order._id || '').slice(-8),
+      date: order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-US') : '—',
+      product: order.items?.[0]?.product?.name || `${order.items?.length || 0} items`,
+      customerName: order.customer?.username || order.customer?.email || 'Unknown customer',
+      avatar: DEFAULT_AVATAR,
+      totalAmount: money(order.totalAmount),
+      status: order.status || 'Pending',
+    }));
+
+  const topProducts = [...products].sort((a, b) => b.sold - a.sold).slice(0, 7);
 
   return (
     <div className="min-h-full bg-slate-50/50 p-4 font-sans text-slate-800 sm:p-8">
       {/* Top Header */}
       <div className="mb-8">
         <h1 className="page-heading">Welcome, Jeriana</h1>
-        <p className="page-date">1 April 2023ca</p>
+        <p className="page-date">{TODAY}</p>
       </div>
 
       {/* Metrics Cards */}
@@ -197,14 +185,14 @@ export default function DashboardPage({ products }) {
         <div className="surface-card p-5">
           <div>
             <h2 className="section-heading">Order Report</h2>
-            <p className="mt-1 text-xs text-slate-400">Sales channel distribution</p>
+            <p className="mt-1 text-xs text-slate-400">Delivery status from orders</p>
           </div>
           <div className="flex min-h-[230px] items-center justify-center gap-4">
             <div className="relative h-40 w-40 shrink-0">
               <svg
                 viewBox="0 0 160 160"
                 role="img"
-                aria-label="Order report: 57 percent e-commerce, 43 percent offline store"
+                  aria-label={`Order report: ${deliveredPercent} percent delivered`}
                 className="h-full w-full -rotate-90"
               >
                 <circle cx="80" cy="80" r="52" fill="none" stroke="#d9dce0" strokeWidth="17" />
@@ -215,11 +203,11 @@ export default function DashboardPage({ products }) {
                   fill="none"
                   stroke="#303236"
                   strokeWidth="17"
-                  strokeDasharray={`${2 * Math.PI * 52 * 0.57} ${2 * Math.PI * 52 * 0.43}`}
+                  strokeDasharray={`${2 * Math.PI * 52 * (deliveredPercent / 100)} ${2 * Math.PI * 52 * (1 - deliveredPercent / 100)}`}
                 />
               </svg>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xl font-bold text-slate-800">12,980</span>
+                <span className="text-xl font-bold text-slate-800">{orders.length.toLocaleString()}</span>
                 <span className="text-xs text-slate-400">total orders</span>
               </div>
             </div>
@@ -227,11 +215,7 @@ export default function DashboardPage({ products }) {
               {orderChannels.map((channel) => (
                 <div key={channel.name}>
                   <p className="flex items-center gap-1.5 text-slate-600">
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        channel.name === 'E-commerce' ? 'bg-[#303236]' : 'bg-[#d9dce0]'
-                      }`}
-                    />
+                    <span className={`h-1.5 w-1.5 rounded-full ${channel.color}`} />
                     {channel.name}
                   </p>
                   <p className="ml-3 text-sm font-bold text-slate-800">{channel.value}%</p>
@@ -239,7 +223,7 @@ export default function DashboardPage({ products }) {
               ))}
             </div>
           </div>
-          <p className="text-xs text-slate-400">Illustrative breakdown</p>
+          <p className="text-xs text-slate-400">Live from the orders API</p>
         </div>
       </section>
 
@@ -264,9 +248,16 @@ export default function DashboardPage({ products }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
+              {recentOrders.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-sm text-slate-400">
+                    No orders recorded yet.
+                  </td>
+                </tr>
+              )}
               {recentOrders.map((order, idx) => (
                 <tr
-                  key={idx}
+                  key={order.orderNumber}
                   className={`transition-colors hover:bg-slate-50/70 ${
                     idx === 0 ? 'bg-sky-50/70' : ''
                   }`}
@@ -343,8 +334,15 @@ export default function DashboardPage({ products }) {
               </tr>
             </thead>
             <tbody className="text-sm text-slate-800">
-              {products.map((product) => {
-                const trend = salesTrends[product.name];
+              {topProducts.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="py-8 text-center text-sm text-slate-400">
+                    No products recorded yet.
+                  </td>
+                </tr>
+              )}
+              {topProducts.map((product) => {
+                const trend = product.unitsSoldLast30Days > 0 ? 'Up' : 'Down';
                 return (
                   <tr key={product.id} className="border-b border-slate-200 last:border-b-0">
                     <td className="py-2">

@@ -66,7 +66,7 @@ function downloadReport(products) {
   URL.revokeObjectURL(url);
 }
 
-export default function InventoryReportPage({ products, setProducts }) {
+export default function InventoryReportPage({ products, onDeleteProducts }) {
   const [activeTab, setActiveTab] = useState('products');
   const [search, setSearch] = useState('');
   const [period, setPeriod] = useState('1 year');
@@ -76,6 +76,7 @@ export default function InventoryReportPage({ products, setProducts }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const filteredProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -109,11 +110,15 @@ export default function InventoryReportPage({ products, setProducts }) {
       : [...new Set([...current, ...pageProducts.map((product) => product.id)])]);
   };
 
-  const removeSelectedProducts = () => {
-    const idsToRemove = new Set(selectedIds);
-    setProducts((current) => current.filter((product) => !idsToRemove.has(product.id)));
-    setSelectedIds([]);
-    setExpandedId(null);
+  const removeSelectedProducts = async () => {
+    setDeleting(true);
+    try {
+      await onDeleteProducts(selectedIds);
+      setSelectedIds([]);
+      setExpandedId(null);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -130,10 +135,11 @@ export default function InventoryReportPage({ products, setProducts }) {
             <button
               type="button"
               onClick={removeSelectedProducts}
-              className="inline-flex h-9 items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
+              disabled={deleting}
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
             >
               <Trash2 className="h-4 w-4" />
-              Remove {selectedIds.length} selected
+              {deleting ? 'Removing…' : `Remove ${selectedIds.length} selected`}
             </button>
           )}
           <button

@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 
-export default function ProductDetails({ product, onClose }) {
+export default function ProductDetails({ product, onClose, onEdit }) {
   const inStock = product.stock > 20;
   const primaryImage = product.images[0];
   const salesRevenue = product.unitsSoldLast30Days * product.price;
@@ -32,14 +32,26 @@ export default function ProductDetails({ product, onClose }) {
           <h2 id="product-overview-title" className="text-lg font-semibold text-slate-800">
             Product overview
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close product details"
-            className="grid h-10 w-10 place-items-center rounded-xl text-slate-500 transition hover:bg-white/70 hover:text-slate-800"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-300 bg-white/70 px-3 text-xs font-medium text-slate-700 transition hover:bg-white"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close product details"
+              className="grid h-10 w-10 place-items-center rounded-xl text-slate-500 transition hover:bg-white/70 hover:text-slate-800"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </header>
 
         <div className="space-y-5 px-7 pb-6 pt-4">

@@ -2,6 +2,7 @@ import express from "express"
 import mongoose from "mongoose"
 import bodyParser from "body-parser"
 import dotenv from "dotenv"
+import cors from "cors"
 
 import productRoute from "./route/productRoute.js";
 import userRoute from "./route/userRoute.js";
@@ -10,6 +11,7 @@ import orderRoute from "./route/orderRoute.js";
 import categoryRoute from "./route/categoryRoute.js";
 
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 dotenv.config();
